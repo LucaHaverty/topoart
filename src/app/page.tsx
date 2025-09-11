@@ -1,103 +1,125 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect } from "react";
+
+import { marchingSquares } from "./lib/marching-squares/marching-squares";
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const getElevationGrid = async (
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number,
+    step: number = 0.01 // degrees
+  ): Promise<number[][]> => {
+    const minLat = Math.min(lat1, lat2);
+    const maxLat = Math.max(lat1, lat2);
+    const minLon = Math.min(lon1, lon2);
+    const maxLon = Math.max(lon1, lon2);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+    // Calculate exact number of rows/columns
+    const rows = Math.round((maxLat - minLat) / step) + 1;
+    const cols = Math.round((maxLon - minLon) / step) + 1;
+
+    const locations: string[] = [];
+    for (let i = 0; i < rows; i++) {
+      const lat = minLat + i * step;
+      for (let j = 0; j < cols; j++) {
+        const lon = minLon + j * step;
+        locations.push(`${lat.toFixed(5)},${lon.toFixed(5)}`);
+      }
+    }
+
+    // Fetch elevations in chunks (max 100 locations per request)
+    const chunkSize = 100;
+    const elevations: number[] = [];
+
+    const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
+
+    for (let i = 0; i < locations.length; i += chunkSize) {
+      console.log("calling api");
+      const chunk = locations.slice(i, i + chunkSize).join("|");
+      const url = `/api/elevation?locations=${chunk}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data.results) {
+        data.results.forEach((r: any) => elevations.push(r.elevation ?? 0));
+      }
+      console.log("called api");
+      await delay(1000); // 200ms pause between requests
+    }
+
+    // Rebuild 2D grid using exact rows/cols
+    const grid: number[][] = [];
+    let index = 0;
+    for (let i = 0; i < rows; i++) {
+      const row: number[] = [];
+      for (let j = 0; j < cols; j++) {
+        row.push(elevations[index++] ?? 0);
+      }
+      grid.push(row);
+    }
+
+    return grid;
+  };
+
+  const normalize = (grid: number[][]): number[][] => {
+    const flat = grid.flat();
+    const max = Math.max(...flat);
+    const min = Math.min(...flat);
+    const diff = max - min || 1;
+    return grid.map((row) => row.map((n) => (n - min) / diff));
+  };
+
+  useEffect(() => {
+    (async () => {
+      console.log("Fetching elevation grid...");
+
+      // Rough bounding box around Mt. Hood
+      const lat1 = 45.3,
+        lon1 = -121.85;
+      const lat2 = 45.45,
+        lon2 = -121.65;
+
+      let grid = await getElevationGrid(lat1, lon1, lat2, lon2, 0.0015);
+      grid = normalize(grid);
+
+      const canvas = document.createElement("canvas") as HTMLCanvasElement;
+      document.body.appendChild(canvas);
+
+      const cellSize = 20;
+      canvas.width = grid[0].length * cellSize;
+      canvas.height = grid.length * cellSize;
+
+      const ctx = canvas.getContext("2d")!;
+
+      // Draw grid as grayscale
+      for (let y = 0; y < grid.length; y++) {
+        for (let x = 0; x < grid[y].length; x++) {
+          const value = Math.max(0, Math.min(1, grid[y][x]));
+          const gray = Math.floor(value * 255);
+          ctx.fillStyle = `rgb(${gray},${gray},${gray})`;
+          ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+        }
+      }
+
+      for (let threshold = 0.05; threshold < 1; threshold += 0.05) {
+        // Run marching squares
+        const result = marchingSquares(grid, threshold);
+
+        // Draw edges in red
+        ctx.strokeStyle = "red";
+        ctx.lineWidth = 2;
+        for (const segment of result) {
+          const [[x1, y1], [x2, y2]] = segment;
+          ctx.beginPath();
+          ctx.moveTo(x1 * cellSize, y1 * cellSize);
+          ctx.lineTo(x2 * cellSize, y2 * cellSize);
+          ctx.stroke();
+        }
+      }
+    })();
+  }, []);
+
+  return <div></div>;
 }
