@@ -1,20 +1,14 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { Button } from "@/components/ui/button"; // Adjusted to standard shadcn import path
 
 import { marchingSquares } from "./lib/marching-squares/marching-squares";
-import {
-  downloadGridJson,
-  fetchElevationFromAPI,
-  loadElevationJson,
-} from "./lib/data-manager";
 import JumpstartPanel from "./panels/0-jumpstart/jumpstart";
 import { Grid } from "@/types";
 
 export default function Home() {
   // 1. Manage the grid data via React state
-  const [gridData, setGridData] = useState<Grid | null>(null);
+  const [gridData] = useState<Grid | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const normalize = (grid: Grid): Grid => {
@@ -26,38 +20,38 @@ export default function Home() {
   };
 
   // 2. Click handler directly bound to user interaction
-  const handleLoadJson = async () => {
-    try {
-      console.log("Prompting user for elevation grid file...");
-      const grid = await loadElevationJson();
+  // const handleLoadJson = async () => {
+  //   try {
+  //     console.log("Prompting user for elevation grid file...");
+  //     const grid = await loadElevationJson();
 
-      if (!grid) throw new Error("Failed to read grid from file");
+  //     if (!grid) throw new Error("Failed to read grid from file");
 
-      // Update state to trigger processing
-      setGridData(grid);
-    } catch (error) {
-      console.error("Error loading JSON file:", error);
-    }
-  };
+  //     // Update state to trigger processing
+  //     setGridData(grid);
+  //   } catch (error) {
+  //     console.error("Error loading JSON file:", error);
+  //   }
+  // };
 
   // Alternative API fetch handler if you still want to support it
-  const handleFetchAPI = async () => {
-    try {
-      console.log("Fetching elevation grid from API...");
-      const lat1 = 45.3,
-        lon1 = -121.85;
-      const lat2 = 45.45,
-        lon2 = -121.65;
+  // const handleFetchAPI = async () => {
+  //   try {
+  //     console.log("Fetching elevation grid from API...");
+  //     const lat1 = 45.3,
+  //       lon1 = -121.85;
+  //     const lat2 = 45.45,
+  //       lon2 = -121.65;
 
-      const grid = await fetchElevationFromAPI(lat1, lon1, lat2, lon2, 0.01);
-      if (!grid) throw new Error("Failed to fetch grid from API");
+  //     const grid = await fetchElevationFromAPI(lat1, lon1, lat2, lon2, 0.01);
+  //     if (!grid) throw new Error("Failed to fetch grid from API");
 
-      downloadGridJson(grid);
-      setGridData(grid);
-    } catch (error) {
-      console.error("Error fetching from API:", error);
-    }
-  };
+  //     downloadGridJson(grid);
+  //     setGridData(grid);
+  //   } catch (error) {
+  //     console.error("Error fetching from API:", error);
+  //   }
+  // };
 
   // 3. This effect runs only when gridData changes
   useEffect(() => {
@@ -68,7 +62,7 @@ export default function Home() {
       containerRef.current.innerHTML = "";
     }
 
-    let grid = normalize(gridData);
+    const grid = normalize(gridData);
 
     const canvas = document.createElement("canvas") as HTMLCanvasElement;
     containerRef.current?.appendChild(canvas);
@@ -106,7 +100,7 @@ export default function Home() {
     }
   }, [gridData]);
 
-  return JumpstartPanel({ stateCreated: () => {} });
+  return JumpstartPanel(/* { stateCreated: () => {} } */);
   // <div className="p-6 flex flex-col gap-4 items-start">
   //   <div className="flex gap-2">
   //     <Button onClick={handleLoadJson}>Upload Elevation JSON</Button>

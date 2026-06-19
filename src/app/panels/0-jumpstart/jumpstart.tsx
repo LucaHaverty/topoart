@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   Card,
   CardContent,
@@ -8,23 +8,13 @@ import {
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { State, UserConfigData, initialConfig } from "@/types";
 
-interface JumpstartProps {
-  stateCreated: (state: State) => void;
-}
+// interface JumpstartProps {
+//   stateCreated: (state: State) => void;
+// }
 
-const JumpstartPanel = (stateCreated: JumpstartProps) => {
+const JumpstartPanel = (/* _: JumpstartProps */) => {
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>

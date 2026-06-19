@@ -1,5 +1,15 @@
 import { Grid } from "@/types";
 
+interface ElevationResult {
+  elevation: number | null;
+  // Add other fields if returned by the API (e.g., location: { lat: number, lng: number })
+}
+
+interface ElevationApiResponse {
+  results?: ElevationResult[];
+  status?: string; // Optional: depending on your API structure
+}
+
 export async function fetchElevationFromAPI(
   lat1: number,
   lon1: number,
@@ -32,14 +42,21 @@ export async function fetchElevationFromAPI(
   const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
   for (let i = 0; i < locations.length; i += chunkSize) {
-    const chunk = locations.slice(i, i + chunkSize).join("|");
-    const url = `/api/elevation?locations=${chunk}`;
-    const res = await fetch(url);
-    const data = await res.json();
+    const chunk: string = locations.slice(i, i + chunkSize).join("|");
+    const url = `/api/elevation?locations=${encodeURIComponent(chunk)}`; // Good practice to encode query params
+
+    const res: Response = await fetch(url);
+
+    // Cast the JSON response to your specific interface
+    const data: ElevationApiResponse = await res.json();
+
     if (data.results) {
-      data.results.forEach((r: any) => elevations.push(r.elevation ?? 0));
+      data.results.forEach((r: ElevationResult) => {
+        elevations.push(r.elevation ?? 0);
+      });
     }
-    await delay(1000); // 200ms pause between requests
+
+    await delay(1000);
   }
 
   // Rebuild 2D grid using exact rows/cols
@@ -82,7 +99,7 @@ export async function loadElevationJson(): Promise<Grid | undefined> {
           // 4. Parse the string into an object and resolve the promise
           const jsonObject = JSON.parse(text) as Grid;
           resolve(jsonObject);
-        } catch (error) {
+        } catch {
           reject(new Error("Invalid JSON file structure"));
         }
       };
