@@ -1,13 +1,15 @@
 // marchingSquares.ts
 
+import { Grid } from "@/types";
+
 /**
  * Optimized Marching Squares with interpolation
  * Returns line segments [[x1,y1],[x2,y2]] representing the contour
  */
 
 export function marchingSquares(
-  grid: number[][],
-  threshold: number
+  grid: Grid,
+  threshold: number,
 ): Array<[[number, number], [number, number]]> {
   const rows = grid.length;
   const cols = grid[0].length;
@@ -40,20 +42,12 @@ export function marchingSquares(
     [], // 15
   ];
 
-  // Edge midpoints relative to cell
-  const edgeOffsets: [number, number][] = [
-    [0.5, 0], // top
-    [1, 0.5], // right
-    [0.5, 1], // bottom
-    [0, 0.5], // left
-  ];
-
   // Linear interpolation between two points
   function interp(
     p1: [number, number],
     p2: [number, number],
     v1: number,
-    v2: number
+    v2: number,
   ): [number, number] {
     if (Math.abs(v1 - v2) < 1e-6) return p1;
     const t = (threshold - v1) / (v2 - v1);
