@@ -6,40 +6,37 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
+import { initialState, State } from "@/types";
 
-// interface JumpstartProps {
-//   stateCreated: (state: State) => void;
-// }
+export type JumpstartProps = {
+  stateCreated: (state: State) => void;
+};
 
-const JumpstartPanel = (/* _: JumpstartProps */) => {
+const JumpstartPanel = (props: JumpstartProps) => {
+  const newProject = () => {
+    // Copy initialState to prevent reference
+    props.stateCreated({ ...initialState });
+  };
+
+  const loadProject = () => {};
+
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          Topographical Map Settings
-          <Button variant="outline" size="sm" onClick={() => console.log("ah")}>
-            Reset
-          </Button>
+          TopoArt
         </CardTitle>
-        <CardDescription>
-          Configure your topographical map generation parameters
-        </CardDescription>
+        <CardDescription>Create artistic topographical maps</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Altitude Range */}
-        <div className="space-y-3">
-          <Label className="text-sm font-medium">Altitude Range: Am - Bm</Label>
-          <Slider
-            value={[10, 20]}
-            onValueChange={() => {}}
-            min={-500}
-            max={8000}
-            step={50}
-            className="w-full"
-          />
+      <CardContent className="">
+        <div className="flex justify-evenly">
+          <Button variant="outline" size="sm" onClick={() => newProject()}>
+            New Project
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => loadProject}>
+            Load Project
+          </Button>
         </div>
       </CardContent>
     </Card>

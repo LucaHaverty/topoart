@@ -1,9 +1,17 @@
 export type State = {
-  config: UserConfigData;
-  mapData: MapData;
+  userConfig: UserConfigData;
+
+  currentPhase: TopoPhase;
+  furthestPhase: TopoPhase;
+
+  grid: number[][] | undefined;
 };
 
 export type UserConfigData = {
+  a: Coordinate | undefined;
+  b: Coordinate | undefined;
+  dataResolution: DataResolution;
+
   minAltitude: number;
   maxAltitude: number;
   numContourLines: number;
@@ -15,15 +23,23 @@ export type UserConfigData = {
   majorContourOffset: number;
 };
 
-export type MapData = {
-  grid: number[][] | undefined;
-};
+export type TopoPhase =
+  | "location-selection"
+  | "configuration"
+  | "fetching-data"
+  | "results";
 
-export const initialMapData: MapData = {
-  grid: undefined,
-};
+export type Coordinate = { lat: number; lng: number };
+export enum DataResolution {
+  Low,
+  Medium,
+  High,
+}
 
 export const initialConfig: UserConfigData = {
+  a: undefined,
+  b: undefined,
+  dataResolution: DataResolution.Low,
   minAltitude: 0,
   maxAltitude: 0,
   numContourLines: 10,
@@ -35,9 +51,11 @@ export const initialConfig: UserConfigData = {
   majorContourOffset: 3,
 };
 
-export const initialSate: State = {
-  config: initialConfig,
-  mapData: initialMapData,
+export const initialState: State = {
+  userConfig: initialConfig,
+  currentPhase: "location-selection",
+  furthestPhase: "location-selection",
+  grid: undefined,
 };
 
 //TODO: remove

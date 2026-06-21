@@ -1,4 +1,4 @@
-import { Grid } from "@/types";
+import { Coordinate, DataResolution, Grid } from "@/types";
 
 interface ElevationResult {
   elevation: number | null;
@@ -11,20 +11,28 @@ interface ElevationApiResponse {
 }
 
 export async function fetchElevationFromAPI(
-  lat1: number,
-  lon1: number,
-  lat2: number,
-  lon2: number,
-  step: number = 0.01, // degrees
+  a: Coordinate,
+  b: Coordinate,
+  dataResolution: DataResolution,
 ): Promise<Grid | undefined> {
-  const minLat = Math.min(lat1, lat2);
-  const maxLat = Math.max(lat1, lat2);
-  const minLon = Math.min(lon1, lon2);
-  const maxLon = Math.max(lon1, lon2);
+  const targetCols =
+    dataResolution == DataResolution.Low
+      ? 30
+      : dataResolution == DataResolution.Medium
+        ? 60
+        : 100;
+  const minLat = Math.min(a.lat, b.lat);
+  const maxLat = Math.max(a.lat, b.lat);
+  const minLon = Math.min(a.lng, b.lng);
+  const maxLon = Math.max(a.lng, b.lng);
 
-  // Calculate exact number of rows/columns
-  const rows = Math.round((maxLat - minLat) / step) + 1;
-  const cols = Math.round((maxLon - minLon) / step) + 1;
+  const lonRange = maxLon - minLon;
+  const latRange = maxLat - minLat;
+
+  // Derive step from desired column count
+  const step = lonRange / (targetCols - 1);
+  const cols = targetCols;
+  const rows = Math.round(latRange / step) + 1;
 
   const locations: string[] = [];
   for (let i = 0; i < rows; i++) {
